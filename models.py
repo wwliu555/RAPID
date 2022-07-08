@@ -88,18 +88,6 @@ class BaseModel(object):
         self.optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
         self.train_step = self.optimizer.minimize(self.loss)
 
-    def build_attention_loss(self):
-        self.label_wt = attention_score(self.label_ph)
-        self.pred_wt = attention_score(self.y_pred)
-        self.loss = tf.losses.log_loss(self.label_wt, self.pred_wt)
-        # self.loss = tf.losses.mean_squared_error(self.label_wt, self.pred_wt)
-        for v in tf.trainable_variables():
-            if 'bias' not in v.name and 'emb' not in v.name:
-                self.loss += self.reg_lambda * tf.nn.l2_loss(v)
-        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
-        # self.optimizer = tf.train.ProximalGradientDescentOptimizer(learning_rate=self.lr)
-        self.train_step = self.optimizer.minimize(self.loss)
-
     def opt(self):
         for v in tf.trainable_variables():
             if 'bias' not in v.name and 'emb' not in v.name:
@@ -196,12 +184,12 @@ class BaseModel(object):
         saver.save(sess, save_path=path)
 
 
-class PEDIR(BaseModel):
+class RAPID(BaseModel):
     def __init__(self, feature_size, eb_dim, hidden_size, max_time_len, max_seq_len, item_fnum, num_cat, mu, map=False,
                  max_norm=None, multi_hot=False, mean_aggregate=False, pure_rnn=False):
-        super(Diver, self).__init__(feature_size, eb_dim, hidden_size, max_time_len,
+        super(RAPID, self).__init__(feature_size, eb_dim, hidden_size, max_time_len,
                                     max_seq_len, item_fnum, num_cat, mu, max_norm, multi_hot)
-        with tf.variable_scope('pedir'):
+        with tf.variable_scope('rapid'):
             self.istrain = tf.placeholder(tf.bool, [])
             self.map = map
             self.mean_aggregate = mean_aggregate

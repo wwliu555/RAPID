@@ -10,7 +10,7 @@ import pickle as pkl
 import numpy as np
 
 from utils import load_data, evaluate, get_aggregated_batch, construct_list
-from models import PEDIR
+from models import RAPID
 from click_models import DCM
 
 
@@ -62,8 +62,8 @@ def train(train_file, test_file, model_type, batch_size, feature_size, eb_dim, h
           item_fnum, num_cat, mu, max_norm, multi_hot):
     tf.reset_default_graph()
 
-    if model_type == 'PEDIR':
-        model = PEDIR(feature_size, eb_dim, hidden_size, max_time_len,
+    if model_type == 'RAPID':
+        model = RAPID(feature_size, eb_dim, hidden_size, max_time_len,
                       max_seq_len, item_fnum, num_cat, mu, False, max_norm, multi_hot)
     else:
         print('No Such Model')
@@ -75,13 +75,13 @@ def train(train_file, test_file, model_type, batch_size, feature_size, eb_dim, h
         'ndcg_l': [],
         'utility_l': [],
         'ils_l': [],
-        'PEDIRsity_l': [],
+        'diversity_l': [],
         'satisfaction_l': [],
         'mrr_l': [],
         'ndcg_h': [],
         'utility_h': [],
         'ils_h': [],
-        'PEDIRsity_h': [],
+        'diversity_h': [],
         'satisfaction_h': [],
         'mrr_h': [],
     }
@@ -109,13 +109,13 @@ def train(train_file, test_file, model_type, batch_size, feature_size, eb_dim, h
         training_monitor['ndcg_l'].append(res_l[0])
         training_monitor['utility_l'].append(res_l[1])
         training_monitor['ils_l'].append(res_l[2])
-        training_monitor['PEDIRsity_l'].append(res_l[3])
+        training_monitor['diversity_l'].append(res_l[3])
         training_monitor['satisfaction_l'].append(res_l[4])
         training_monitor['mrr_l'].append(res_l[5])
         training_monitor['ndcg_h'].append(res_h[0])
         training_monitor['utility_h'].append(res_h[1])
         training_monitor['ils_h'].append(res_h[2])
-        training_monitor['PEDIRsity_h'].append(res_h[3])
+        training_monitor['diversity_h'].append(res_h[3])
         training_monitor['satisfaction_h'].append(res_h[4])
         training_monitor['mrr_h'].append(res_h[5])
 
@@ -154,13 +154,13 @@ def train(train_file, test_file, model_type, batch_size, feature_size, eb_dim, h
                     training_monitor['ndcg_l'].append(res_l[0])
                     training_monitor['utility_l'].append(res_l[1])
                     training_monitor['ils_l'].append(res_l[2])
-                    training_monitor['PEDIRsity_l'].append(res_l[3])
+                    training_monitor['diversity_l'].append(res_l[3])
                     training_monitor['satisfaction_l'].append(res_l[4])
                     training_monitor['mrr_l'].append(res_l[5])
                     training_monitor['ndcg_h'].append(res_h[0])
                     training_monitor['utility_h'].append(res_h[1])
                     training_monitor['ils_h'].append(res_h[2])
-                    training_monitor['PEDIRsity_h'].append(res_h[3])
+                    training_monitor['diversity_h'].append(res_h[3])
                     training_monitor['satisfaction_h'].append(res_h[4])
                     training_monitor['mrr_h'].append(res_h[5])
 
@@ -201,14 +201,14 @@ if __name__ == '__main__':
     multi_hot = True if data_set_name == 'ml-20m' else False
     stat_dir = os.path.join(data_dir, data_set_name + '/raw_data/data.stat')
     processed_dir = os.path.join(data_dir, data_set_name + '/processed/')
-    item_div_dir = os.path.join(processed_dir, 'PEDIRsity.item')
+    item_div_dir = os.path.join(processed_dir, 'diversity.item')
     dcm_dir = os.path.join(data_dir, data_set_name + '/dcm.theta')
     item_fnum = 2
     user_fnum = 1
     # initial_rankers = 'svm'
     # initial_rankers = 'mart'
     initial_rankers = 'DIN'
-    model_type = 'PEDIR'
+    model_type = 'RAPID'
     max_time_len = 20
     max_behavior_len = 5
     num_clusters = 5
