@@ -14,7 +14,7 @@ from models import RAPID
 from click_models import DCM
 
 
-def eval(model, sess, data_file, max_time_len, reg_lambda, batch_size, num_cat, isrank):
+def eval(model, sess, data_file, max_time_len, max_seq_len, reg_lambda, batch_size, num_cat, isrank):
     preds = []
     terms = []
     labels = []
@@ -23,7 +23,7 @@ def eval(model, sess, data_file, max_time_len, reg_lambda, batch_size, num_cat, 
     items = []
     items_div = []
 
-    data = load_data(data_file, click_model, test=True)
+    data = load_data(data_file, click_model, num_cat, max_seq_len, test=True)
     data_size = len(data[0])
     batch_num = data_size // batch_size
     print('eval', batch_size, batch_num)
@@ -44,10 +44,10 @@ def eval(model, sess, data_file, max_time_len, reg_lambda, batch_size, num_cat, 
         os.makedirs('logs_{}/{}/'.format(data_set_name, max_time_len))
     model_name = '{}_{}_{}_{}_{}_{}'.format(initial_rankers, model_type, batch_size, lr, reg_lambda, hidden_size)
 
-    if isrank:
-        pickle.dump([preds, users, items], open('logs_{}//{}/{}_res.pkl'.format(data_set_name, max_time_len, model_name), 'wb'))
-    else:
-        pickle.dump([preds, users, items], open('logs_{}//{}/{}_init.pkl'.format(data_set_name, max_time_len, model_name), 'wb'))
+#     if isrank:
+#         pickle.dump([preds, users, items], open('logs_{}//{}/{}_res.pkl'.format(data_set_name, max_time_len, model_name), 'wb'))
+#     else:
+#         pickle.dump([preds, users, items], open('logs_{}//{}/{}_init.pkl'.format(data_set_name, max_time_len, model_name), 'wb'))
 
     loss = sum(losses) / len(losses)
 
@@ -102,7 +102,7 @@ def train(train_file, test_file, model_type, batch_size, feature_size, eb_dim, h
 
         # before training process
         step = 0
-        vali_loss, res_l, res_h = eval(model, sess, test_file, max_time_len, reg_lambda, batch_size, num_cat, False)
+        vali_loss, res_l, res_h = eval(model, sess, test_file, max_time_len, max_seq_len, reg_lambda, batch_size, num_cat, False)
 
         training_monitor['train_loss'].append(None)
         training_monitor['vali_loss'].append(None)
@@ -125,7 +125,7 @@ def train(train_file, test_file, model_type, batch_size, feature_size, eb_dim, h
         step, res_l[0], res_l[1], res_l[2], res_l[3], res_l[4], res_l[5], res_h[0], res_h[1], res_h[2], res_h[3], res_h[4], res_h[5]))
         early_stop = False
 
-        data = load_data(train_file, click_model)
+        data = load_data(train_file, click_model, num_cat, max_seq_len)
         data_size = len(data[0])
         batch_num = data_size // batch_size
         eval_iter_num = (data_size // 5) // batch_size
@@ -148,7 +148,7 @@ def train(train_file, test_file, model_type, batch_size, feature_size, eb_dim, h
                     training_monitor['train_loss'].append(train_loss)
                     train_losses_step = []
 
-                    vali_loss, res_l, res_h = eval(model, sess, test_file, max_time_len, reg_lambda, batch_size, num_cat, True)
+                    vali_loss, res_l, res_h = eval(model, sess, test_file, max_time_len, max_seq_len, reg_lambda, batch_size, num_cat, True)
                     training_monitor['train_loss'].append(train_loss)
                     training_monitor['vali_loss'].append(vali_loss)
                     training_monitor['ndcg_l'].append(res_l[0])
