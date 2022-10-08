@@ -200,12 +200,12 @@ def construct_list(data_dir, max_time_len, num_cat, is_train, multi_hot=False):
     return feat, click, seq_len, user_behavior, items_div, uid, pred
 
 
-def load_data(data, click_model, test=False):
+def load_data(data, click_model, num_cate, max_hist_len, test=False):
     feat, click, seq_len, user_behavior, items_div, uid, _ = data
-    feat_cm, label_cm, seq_len_cm, user_behavior_cm, items_div_cm, uid_cm = [], [], [], [], [], []
+    feat_cm, label_cm, seq_len_cm, user_behavior_cm, items_div_cm, uid_cm, behav_len_cm = [], [], [], [], [], [], []
     i = 0
     for feat_i, click_i, seq_len_i, user_i, div_i, uid_i in zip(feat, click, seq_len, user_behavior, items_div, uid):
-
+        behav_len = process_seq(user_i, num_cate, max_hist_len)
         item_list_i = [itm[0] for itm in feat_i]
         label_cm_i = click_model.generate_clicks(uid_i, item_list_i, len(item_list_i))
         if not test:
@@ -214,13 +214,27 @@ def load_data(data, click_model, test=False):
 
         feat_cm.append(feat_i)
         user_behavior_cm.append(user_i)
+        behav_len_cm.append(behav_len)
         label_cm.append(label_cm_i)
         items_div_cm.append(div_i)
         seq_len_cm.append(seq_len_i)
         uid_cm.append(uid_i)
 
-    return feat_cm, label_cm, seq_len_cm, user_behavior_cm, items_div_cm, uid_cm
+    return feat_cm, label_cm, seq_len_cm, user_behavior_cm, items_div_cm, uid_cm, behav_len_cm
 
+
+def get_hist_len(seq):
+    length = 0
+    while length < len(seq) and seq[length] > 0:
+        length += 1
+    return length
+
+def process_seq(seq, num_cate, seq_len):
+    len_list = []
+    seq = np.reshape(np.array(seq), [num_cate, seq_len])
+    for idx in range(num_cate):
+        len_list.append(get_hist_len(seq[idx]))
+    return len_list
 
 def rerank(attracts, terms):
     val = np.array(attracts) * np.array(np.ones_like(terms))
