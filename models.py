@@ -18,6 +18,7 @@ class BaseModel(object):
             else:
                 self.feat_ph = tf.placeholder(tf.int32, [None, max_time_len, item_fnum], name='seq_feat_ph')
             self.user_behavior_ph = tf.placeholder(tf.int32, [None, max_seq_len * num_cat], name='user_behavior_ph')
+            self.behavior_len_ph = tf.placeholder(tf.int32, [None, num_cat], name='behavior_len_ph')
             self.seq_length_ph = tf.placeholder(tf.int32, [None, ], name='seq_length_ph')
             self.label_ph = tf.placeholder(tf.float32, [None, max_time_len], name='label_ph')
             self.items_div = tf.placeholder(tf.float32, [None, max_time_len, num_cat], name='items_div')
@@ -205,8 +206,9 @@ class RAPID(BaseModel):
                     inputs=attended_cat), [-1, self.num_cat * eb_dim])
             else:
                 self.user_seq = tf.reshape(self.user_seq, [-1, max_seq_len, eb_dim])
-                # self.user_seq = tf.unstack(self.user_seq, max_seq_len, 1)
-                behave_outputs, _ = tf.nn.dynamic_rnn(LSTMCell(hidden_size), inputs=self.user_seq, dtype='float32', scope='behavior_gru')
+                # self.user_seq = tf.unstack(self.user_seq, max_seq_len, 1)'
+                length = tf.reshape(self.behavior_len_ph, [-1])
+                behave_outputs, _ = tf.nn.dynamic_rnn(LSTMCell(hidden_size), inputs=self.user_seq, sequence_length=length, dtype='float32', scope='behavior_gru')
                 # self.bilstm(self.user_seq, hidden_size, scope='behave_bilstm')
                 self.user_seq = tf.reshape(behave_outputs[-1], (-1, num_cat, hidden_size))
 
@@ -297,6 +299,7 @@ class RAPID(BaseModel):
             self.label_ph: batch_data[1],
             self.seq_length_ph: batch_data[2],
             self.user_behavior_ph: batch_data[3],
+            self.behavior_len_ph: batch_data[-1],
             self.items_div: batch_data[4],
             self.lr: lr,
             self.reg_lambda: reg_lambda,
@@ -311,6 +314,7 @@ class RAPID(BaseModel):
             self.label_ph: batch_data[1],
             self.seq_length_ph: batch_data[2],
             self.user_behavior_ph: batch_data[3],
+            self.behavior_len_ph: batch_data[-1],
             self.items_div: batch_data[4],
             self.reg_lambda: reg_lambda,
             self.keep_prob: keep_prob,
